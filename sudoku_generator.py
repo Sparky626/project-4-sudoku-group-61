@@ -1,4 +1,7 @@
 import math,random
+import numpy as np
+import pygame
+
 
 """
 This was adapted from a GeeksforGeeks article "Program for Sudoku Generator" by Aarti_Rathi and Ankur Trisal
@@ -23,7 +26,12 @@ class SudokuGenerator:
 	None
     '''
     def __init__(self, row_length, removed_cells):
-        pass
+        self.row_length = row_length
+        self.removed_cells = removed_cells
+        self.board = [[0 for i in range(row_length)] for j in range(row_length)]
+        self.box_length = int(math.sqrt(row_length))
+        #self.generate_board()
+        
 
     '''
 	Returns a 2D python list of numbers which represents the board
@@ -32,7 +40,7 @@ class SudokuGenerator:
 	Return: list[list]
     '''
     def get_board(self):
-        pass
+        return self.board
 
     '''
 	Displays the board to the console
@@ -42,7 +50,8 @@ class SudokuGenerator:
 	Return: None
     '''
     def print_board(self):
-        pass
+        for row in self.board:
+          print(row)
 
     '''
 	Determines if num is contained in the specified row (horizontal) of the board
@@ -55,7 +64,10 @@ class SudokuGenerator:
 	Return: boolean
     '''
     def valid_in_row(self, row, num):
-        pass
+      for i in range(self.row_length):
+        if self.board[row][i] == num:
+          return False
+      return True
 
     '''
 	Determines if num is contained in the specified column (vertical) of the board
@@ -68,7 +80,11 @@ class SudokuGenerator:
 	Return: boolean
     '''
     def valid_in_col(self, col, num):
-        pass
+        for i in range(self.row_length):
+          col = int(col)
+          if self.board[i][col] == num:
+            return False
+        return True
 
     '''
 	Determines if num is contained in the 3x3 box specified on the board
@@ -83,7 +99,14 @@ class SudokuGenerator:
 	Return: boolean
     '''
     def valid_in_box(self, row_start, col_start, num):
-        pass
+      box_row = row_start - row_start % self.box_length
+      box_col = col_start - col_start % self.box_length
+      for i in range(box_row, box_row + self.box_length):
+          for j in range(box_col, box_col + self.box_length ):
+              if self.board[i][j] == num:
+                  return False
+      return True
+      
     
     '''
     Determines if it is valid to enter num at (row, col) in the board
@@ -96,7 +119,7 @@ class SudokuGenerator:
 	Return: boolean
     '''
     def is_valid(self, row, col, num):
-        pass
+        return self.valid_in_row(row, num) and self.valid_in_col(col, num) and self.valid_in_box(row, col, num)
 
     '''
     Fills the specified 3x3 box with values
@@ -109,7 +132,15 @@ class SudokuGenerator:
 	Return: None
     '''
     def fill_box(self, row_start, col_start):
-        pass
+        unused_nums = []
+        for i in range(0, 10):
+            if self.valid_in_box(row_start,col_start, i) == True:
+                unused_nums.append(i)
+        random.shuffle(unused_nums)
+        for i in range(row_start, row_start + 3):
+            for j in range(col_start, col_start + 3):
+                if self.board[i][j] == 0:
+                    self.board[i][j] = unused_nums.pop()
     
     '''
     Fills the three boxes along the main diagonal of the board
@@ -119,8 +150,9 @@ class SudokuGenerator:
 	Return: None
     '''
     def fill_diagonal(self):
-        pass
-
+        for i in range(0, self.row_length, 3):
+            self.fill_box(i, i)
+          
     '''
     DO NOT CHANGE
     Provided for students
@@ -185,7 +217,17 @@ class SudokuGenerator:
 	Return: None
     '''
     def remove_cells(self):
-        pass
+        count = self.removed_cells
+ 
+        while (count != 0):
+            i = random.randint(0,8)
+            j = random.randint(0,8)
+            if (self.board[i][j] != 0):
+                count -= 1
+                self.board[i][j] = 0
+            else:
+                continue
+        return
 
 '''
 DO NOT CHANGE
@@ -209,3 +251,141 @@ def generate_sudoku(size, removed):
     sudoku.remove_cells()
     board = sudoku.get_board()
     return board
+
+'''
+Initializing variables for the value, size, and location of each cell. 
+Parameters: 
+value - the number 
+row and col - location of cell, counted by index
+screen - calculations for program visuals 
+sketched and selected - for users to navigate the game 
+Returns None
+'''
+
+class cell:
+  def __init__(self, value, row, col, screen, selected = False):
+    self.value = value 
+    self.row = row 
+    self.col = col 
+    self.screen = screen 
+    self.sketched_value = 0 
+    self.selected = selected
+
+
+'''
+Changes the value of the cell with a the new value.
+Parameters: the new value 
+Returns None
+  
+  
+'''
+def set_cell_value(self, value):
+  self.set_cell_value = value
+  
+'''
+Changes the potential new value of the cell. 
+Parameters: the possible new value
+Returns None
+'''
+  def set_sketched_value(self, value):
+    self.set_sketched_value = value
+'''
+Computes the cells of the board in accordance to its dimensions and visuals. 
+'''
+  def draw(self):
+    rectleft = self.col * 60 + 120
+    recttop = self.row * 60 + 50
+    rectwidth = 60
+    rectheight = 60
+    if self.selected == True:
+      pygame.draw.rect(self.screen,(255,0,0),(rectleft,recttop, rectwidth, rectheight),2)
+    else:
+      pygame.draw.rect(self.screen,(0,0,0),(rectleft,recttop, rectwidth, rectheight),2)
+    if self.value != 0:
+      font = pygame.font.SysFont("comicsansms",60)
+      text = font.render(str(self.value),True, (0,0,0))
+      self.screen.blit(text, (self.col * 60 + 60 / 2 - text.get_width() / 2+ 120, self.row * 60 + 60 /2 - text.get_height() / 2+ 50))
+    if self.sketched_value != 0:
+      font = pygame.font.SysFont("comicsansms",15)
+      text = font.render(str(self.sketched_value), True,(0,0,0))
+      self.screen.blit(text, (self.col * 60 + 60 / 2 - text.get_width() / 2+ 0, self.row * 60 + 60 / 2 - text.get_height() / 2+ 50))
+
+'''
+Initializes the variables needed to calculate the dimensions and different levels available. 
+Parameters:
+width and height - dimensions of board 
+difficulty - 3 levels: easy, medium, and hard
+'''
+
+class Board:
+  def __init__(self, width, height, screen, difficulty):
+    self.width = width
+    self.height = height
+    self.screen = screen 
+    self.difficulty = difficulty 
+'''
+The principal function for displaying the game board.
+Returns printed board
+'''
+  def Print_Board(board):
+    for i in range(9):
+      for j in range(9):
+        if j == 0:
+            print("|", end='')
+        if j != 8:
+            print(board[i, j], end=' ')
+        else:
+            print(board[i, j], end='')
+        if (j + 1) % 3 == 0:
+            print("|", end='')
+    if (i + 1) % 3 == 0:
+        print("\n---------------------", end='')
+    print()
+'''
+Searching if specific cell if available then returning the location to user. 
+Returns indexed location in board 
+'''
+  def Find_Empty_Cell(board):
+    for i in range(9):
+      for j in range(9):
+        if board[i, j] == 0:
+            row = i
+            col = j
+            Fill_Chk = 1
+            res = np.array([row, col, Fill_Chk], dtype="int8")
+            return res
+    res = np.array([-1, -1, 0])
+    return res 
+    
+  def Check_Validity(board, row, col, num):
+    row_start = (row // 3) * 3
+    col_start = (col // 3) * 3
+    if num in board[:, col] or num in board[row, :]:
+        return False
+    if num in board[row_start:row_start + 3, col_start:col_start + 3]:
+        return False
+    return True
+ '''
+Allows user to reset cell value. 
+ '''
+  def Clear_Cell(self):
+    for i in range(9):
+      for j in range(9): 
+        self.value == 0
+        
+  def draw(self, board):
+    for i in range(0, len(board)):
+        for l in range(0, len(board[i])):
+            current_cell = cell(board[i][l], i, l, self.screen)
+            current_cell.draw
+          
+  def is_finished(self):
+        for i in range(self.rows):
+            for j in range(self.cols):
+                if self.cubes[i][j].value == 0:
+                    return False
+        return True
+
+                
+    
+  
